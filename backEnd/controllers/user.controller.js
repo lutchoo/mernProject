@@ -2,12 +2,16 @@ const UserModel = require("../models/user.model");
 const ObjectId = require("mongoose").Types.ObjectId;
 
 module.exports.getAllUsers = async (req, res) => {
-  const users = await UserModel.find().select("-password");
-  res.status(200).json(users);
+  try {
+    const users = await UserModel.find().select("-password");
+    res.status(200).json(users);
+  } catch {
+    console.log("id unknown : " + err);
+  }
 };
 
 module.exports.userInfo = async (req, res) => {
-  console.log(req.params);
+  // console.log(req.params);
   if (!ObjectId.isValid(req.params.id))
     return res.status(400).send("id unknown :" + req.params.id);
 

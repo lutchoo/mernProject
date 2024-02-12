@@ -22,18 +22,37 @@ module.exports.chekUser = (req, res, next) => {
   }
 };
 
+// module.exports.requireAuth = (req, res, next) => {
+//   const token = req.cookies.jwt;
+//   if (token) {
+//     jwt.verify(token, process.env.TOKEN_SECRET, async (err, decodedToken) => {
+//       if (err) {
+//         console.log(err);
+//       } else {
+//         console.log(decodedToken.id);
+//         next();
+//       }
+//     });
+//   } else {
+//     console.log("no token");
+//   }
+// };
 module.exports.requireAuth = (req, res, next) => {
   const token = req.cookies.jwt;
   if (token) {
     jwt.verify(token, process.env.TOKEN_SECRET, async (err, decodedToken) => {
       if (err) {
         console.log(err);
+        res.status(401).json({ message: "Unauthorized" });
       } else {
-        // console.log(decodedToken.id);
+        // Assurez-vous que res.locals.user est défini avec les données du jeton
+        res.locals.user = decodedToken;
+        res.status(201).json({ message: "Authorized" });
         next();
       }
     });
   } else {
     console.log("no token");
+    res.status(401).json({ message: "Unauthorized" });
   }
 };
