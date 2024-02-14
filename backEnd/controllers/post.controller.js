@@ -82,9 +82,7 @@ module.exports.likePost = async (req, res) => {
       { new: true }
     );
     if (!likedPost) {
-      return res
-        .status(404)
-        .send("Aucun utilisateur trouvé avec cet identifiant");
+      return res.status(404).send("Aucun utilisateur trouvé avec cet identifiant");
     }
     res.send("Post aimé avec succès");
   } catch (err) {
@@ -155,16 +153,50 @@ module.exports.commentPost = async (req, res) => {
 };
 
 module.exports.editCommentPost = async (req, res) => {
+  // Vérifie si l'ID est valide
   if (!ObjectId.isValid(req.params.id))
     return res.status(400).send("ID inconnu :" + req.params.id);
   try {
-    return PostModel.findById(req.aprams.id, (err, docs) => {
-      const theComment = docs.comments.find({ comment });
-      comment._id.equals(req.body.commentId);
-    });
-  } catch (err) {}
+    // Recherche la publication par son ID
+    const post = await PostModel.findById(req.params.id);
+    if (!post) 
+      return res.status(404).send("Publication non trouvée");
+    // Recherche le commentaire par son ID
+    const theComment = post.comments.find(comment => comment._id.equals(req.body.commentId));
+    console.log(theComment);
+    if (!theComment) 
+      return res.status(404).send("Commentaire non trouvé");
+    // Met à jour le texte du commentaire avec le nouveau texte fourni
+    theComment.text = req.body.text;
+    // Sauvegarde les modifications dans la base de données
+    await post.save();
+    // Répond avec la publication mise à jour
+    return res.status(200).send(post);
+  } catch (err) {
+    // Gestion des erreurs
+    return res.status(500).send(err.message);
+  }
 };
 module.exports.deleteCommentPost = async (req, res) => {
   if (!ObjectId.isValid(req.params.id))
     return res.status(400).send("ID inconnu :" + req.params.id);
+  try{
+  const deletePost = await postModel.findByIdAndUpdate(
+    req.params.id,
+    {
+      $pull:{
+        comments:{
+          _id: req.body.commentId
+        }
+      }
+    },
+    {new: true},
+  );
+  if(!deletePost) return res.status(400).sen('error deletePost not find')
+
+  return res.status(200).send('post deleted with succes')
+
+  }catch(err){
+    return res.status(400).send('Error comment not deleted')
+  }
 };
